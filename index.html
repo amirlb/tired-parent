@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name=viewport content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>😴 מד העייפות 😴</title>
+    <style>
+        html, body {
+            user-select: none;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        svg {
+            float: right;
+            height: 100%;
+        }
+        #ruler path {
+            stroke: black;
+            stroke-linecap: round;
+        }
+        #thumb {
+            stroke: none;
+            fill: black;
+        }
+        #thumb.hidden {
+            fill: none;
+        }
+        svg text {
+            fill: black;
+            text-anchor: end;
+            dominant-baseline: middle;
+            font-family: Arial, sans-serif;
+            font-size: 48px;
+        }
+        svg text.notselected {
+            fill: #444;
+        }
+        svg text.selected {
+            font-size: 52px;
+        }
+    </style>
+</head>
+<body>
+    <svg viewBox="-30 0 480 1000">
+        <g id="ruler">
+            <path d="M 370 20 v 960" stroke-width="5" />
+            <path d="M 350 140 h 40 M 350 320 h 40 M 350 500 h 40 M 350 680 h 40 M 350 860 h 40" stroke-width="4" />
+            <path d="M 360 60 h 20 M 360 230 h 20 M 360 410 h 20 M 360 590 h 20 M 360 770 h 20 M 360 950 h 20" stroke-width="2.5" />
+        </g>
+        <path id="thumb" class="hidden" d="M 400 0 L 430 18 L 430 -18" />
+        <text x="300" y="140">יקיצה טבעית</text>
+        <text x="300" y="320">ישנתי מספיק</text>
+        <text x="300" y="500">מתפקד בקושי</text>
+        <text x="300" y="680">לא מתפקד</text>
+        <text x="300" y="860">בוכה מעייפות</text>
+    </svg>
+    <script>
+        const svg = document.querySelector('svg');
+        function transformCoords(ev) {
+            let pt = svg.createSVGPoint();
+            pt.x = ev.clientX;
+            pt.y = ev.clientY;
+            return pt.matrixTransform(svg.getScreenCTM().inverse());
+        }
+        function updateThumb(y) {
+            if (y < 40 || y > 960)
+                return;
+                console.log([y, typeof y])
+            svg.getElementById('thumb').classList.remove('hidden');
+            svg.getElementById('thumb').setAttribute('transform', `translate(0, ${y})`);
+            let best_dist = Infinity, best_elt;
+            for (const elt of svg.querySelectorAll('text')) {
+                elt.classList.remove('selected');
+                elt.classList.add('notselected');
+                const dist = Math.abs(y - parseInt(elt.getAttribute('y')));
+                if (dist < best_dist) {
+                    best_dist = dist;
+                    best_elt = elt;
+                }
+            }
+            best_elt.classList.add('selected');
+            best_elt.classList.remove('notselected');
+        };
+
+        svg.addEventListener('mousedown', (ev) => {updateThumb(transformCoords(ev).y);});
+        svg.addEventListener('mousemove', (ev) => {
+            if (ev.buttons)
+                updateThumb(transformCoords(ev).y);
+        });
+        svg.addEventListener('touchdown', (ev) => {updateThumb(transformCoords(ev.touches[0]).y);});
+        svg.addEventListener('touchmove', (ev) => {
+            if (ev.touches.length)
+                updateThumb(transformCoords(ev.touches[0]).y);
+        });
+
+        for (const elt of svg.querySelectorAll('text')) {
+            elt.addEventListener('mousedown', (ev) => {ev.stopPropagation()});
+            elt.addEventListener('touchdown', (ev) => {ev.stopPropagation()});
+            elt.addEventListener('click', (ev) => {
+                updateThumb(ev.target.getAttribute('y'));
+            });
+        }
+    </script>
+</body>
+</html>
